@@ -1,0 +1,103 @@
+// === User parameters: set input and output folders ===
+inputDir = "/Users/jmt/Desktop/mytiffs/";   // Change to your input folder
+outputDir = "/Users/jmt/Desktop/temp/";  // Change to your output folder
+
+// === 1. Open first 3 TIFF images from inputDir ===
+list = getFileList(inputDir);
+count = 0;
+
+for (i = 0; i < list.length; i++) {
+    if (endsWith(list[i], ".tif")) {
+        open(inputDir + list[i]);
+        count++;
+        if (count == 3) break;
+    }
+}
+
+if (count < 3) {
+    exit("Fewer than 3 TIFF images found in folder.");
+}
+
+// === 2. Combine opened images into a stack ===
+run("Images to Stack", "name=AlignedStack use");
+
+// === 3. Register the stack using Linear Stack Alignment with SIFT ===
+run("Linear Stack Alignment with SIFT");
+
+// === 3.5 Close Aligned Stack ===
+selectWindow("AlignedStack");
+close();
+
+// === 4. Run Color Deconvolution: H DAB ===
+run("Colour Deconvolution", "vectors=[H DAB]");
+
+// === 5. Close residual stack (C3) ===
+selectWindow("Aligned 3 of 3-(Colour_3)");
+close();
+
+// === 5.5 Close Aligned stack and Colour Deconvolution windows ===
+selectWindow("Aligned 3 of 3");
+close();
+selectWindow("Colour Deconvolution");
+close();
+
+// === 6. Save slice 2 from Hematoxylin (C1) ===
+selectWindow("Aligned 3 of 3-(Colour_1)");
+run("Stack to Images");
+selectWindow("Aligned-0003"); // === CHANGE DIRECTORY to whichever you want to use for HEMA for the set
+saveAs("Tiff", outputDir + "Hema.tif");
+
+// Close all windows with i38 in the name - change depending on exp title
+titles = getList("image.titles");
+for (i = 0; i < titles.length; i++) {
+    if (indexOf(titles[i], "Aligned-0") != -1) {
+        selectWindow(titles[i]);
+        close();
+        }
+}
+
+// Close Hema.tif
+titles = getList("image.titles");
+
+for (i = 0; i < titles.length; i++) {
+     lowerTitle = toLowerCase(titles[i]);
+    if (indexOf(lowerTitle, "hema") != -1) {
+        selectWindow(titles[i]);
+        close();
+    }
+}
+
+// === 7. Save all x slices from DAB (C2) THIS US WHERE IT GOES WRONG -GD===
+selectWindow("Aligned 3 of 3-(Colour_2)");
+run("Stack to Images");
+
+outputDir = "/Users/jmt/Desktop/temp/";
+titles = getList("image.titles");
+
+for (i = 0; i < titles.length; i++) {
+    if (startsWith(titles[i], "Aligned")) {
+        selectWindow(titles[i]);
+        saveAs("Tiff", outputDir + titles[i] + ".tif");
+        close();
+    }
+}
+
+// Folder with your images
+dir = "/Users/jmt/Desktop/temp/";
+
+run("Close All");
+
+open("/Users/jmt/Desktop/temp/Hema.tif");
+open("/Users/jmt/Desktop/temp/Aligned-0001.tif");
+open("/Users/jmt/Desktop/temp/Aligned-0003.tif");
+open("/Users/jmt/Desktop/temp/Aligned-0002.tif");
+run("Images to Stack", "name=Stack =[] use keep");
+run("Stack to Hyperstack...", "order=xyczt(default) channels=4 slices=1 frames=1 display=Color");
+run("Invert", "stack");
+run("Blue");
+Stack.setChannel(2);
+run("Red");
+saveAs("Tiff", "/Volumes/JMT_Bio/i38_MICSSS/3_ImageJ/3_Composite/i38_2L_Composite");
+
+// Close all images
+close("*");

@@ -1,0 +1,17 @@
+open("/Volumes/JMTPass/MICSSS_2/3_ImageJ/2_Deconvolution/i45_1N-LBK_ROI_0_HE_Hematoxylin.tif");
+open("/Volumes/JMTPass/MICSSS_2/3_ImageJ/2_Deconvolution/i45_1N-LBK_ROI_0_GFP.tif");
+open("/Volumes/JMTPass/MICSSS_2/3_ImageJ/2_Deconvolution/i45_1N-LBK_ROI_0_FOLR2.tif");
+open("/Volumes/JMTPass/MICSSS_2/3_ImageJ/2_Deconvolution/i45_1N-LBK_ROI_0_F480.tif");
+open("/Volumes/JMTPass/MICSSS_2/3_ImageJ/2_Deconvolution/i45_1N-LBK_ROI_0_CD8.tif");
+run("Images to Stack", "name=Stack =[] use keep");
+run("Stack to Hyperstack...", "order=xyczt(default) channels=5 slices=1 frames=1 display=Color");
+run("Invert", "stack");
+run("Blue");
+Stack.setChannel(2);
+run("Red");
+saveAs("Tiff", "/Volumes/JMTPass/MICSSS_2/3_ImageJ/3_Composite/i45_1N-LBK_ROI_0_composite.tif");
+close();
+close();
+close();
+close();
+close();
